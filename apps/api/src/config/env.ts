@@ -16,6 +16,8 @@ const schema = z.object({
   PAYMENT_GATEWAY: z.enum(['mock', 'payhere']).default('mock'),
   PAYHERE_MERCHANT_ID: z.string().optional(),
   PAYHERE_MERCHANT_SECRET: z.string().optional(),
+  PAYHERE_APP_ID: z.string().optional(),
+  PAYHERE_APP_SECRET: z.string().optional(),
   PAYHERE_SANDBOX: z
     .string()
     .default('true')

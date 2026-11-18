@@ -86,17 +86,64 @@ export class PayHereGateway implements PaymentGateway {
     };
   }
 
-  /**
-   * Status lookup and refunds use PayHere's Merchant API, which needs OAuth app credentials
-   * (separate from the checkout secret). Until those are configured, reconciliation relies on
-   * webhooks and refunds are flagged for manual processing in the PayHere portal.
+  /* ---------- Merchant API (status lookup + refunds) ----------
+   * Uses PayHere's Merchant API with OAuth client credentials (App ID / App Secret created in the
+   * PayHere portal under Integrations → API Keys, separate from the checkout merchant secret).
+   * Without those credentials, lookups return null (reconciliation relies on webhooks) and refunds are
+   * recorded as MANUAL-… so staff can process them in the merchant portal.
    */
-  async lookup(): Promise<GatewayEvent | null> {
-    return null;
+  private token: { value: string; expiresAt: number } | null = null;
+
+  private hasApiCreds() {
+    return Boolean(env.PAYHERE_APP_ID && env.PAYHERE_APP_SECRET);
+  }
+
+  private async accessToken() {
+    if (this.token && this.token.expiresAt > Date.now() + 30_000) return this.token.value;
+    const basic = Buffer.from(`${env.PAYHERE_APP_ID}:${env.PAYHERE_APP_SECRET}`).toString('base64');
+    const res = await fetch(`${this.base}/merchant/v1/oauth/token`, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'grant_type=client_credentials',
+    });
+    if (!res.ok) throw new Error(`PayHere OAuth failed with ${res.status}`);
+    const data = (await res.json()) as { access_token: string; expires_in?: number };
+    this.token = { value: data.access_token, expiresAt: Date.now() + (data.expires_in ?? 300) * 1000 };
+    return this.token.value;
+  }
+
+  private async api<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const res = await fetch(`${this.base}/merchant/v1${path}`, {
+      ...init,
+      headers: { Authorization: `Bearer ${await this.accessToken()}`, 'Content-Type': 'application/json', ...init.headers },
+    });
+    if (!res.ok) throw new Error(`PayHere API ${path} failed with ${res.status}`);
+    return (await res.json()) as T;
+  }
+
+  /** Looks up a payment by our order_id (= Payment.id). Null when unknown or not configured. */
+  async lookup(paymentId: string): Promise<GatewayEvent | null> {
+    if (!this.hasApiCreds()) return null;
+    const r = await this.api<{ status: number; data?: { payment_id: number | string; status: string; amount: number; currency: string; method?: string }[] }>(
+      `/payment/search?order_id=${encodeURIComponent(paymentId)}`,
+    );
+    const p = r.status === 1 ? r.data?.[0] : undefined;
+    if (!p) return null;
+    const s = p.status.toUpperCase();
+    const outcome: GatewayEvent['outcome'] = s === 'RECEIVED' || s.startsWith('REFUND') ? 'SUCCESS' : s === 'FAILED' || s === 'CHARGEBACKED' || s === 'CANCELLED' ? 'FAILED' : 'PENDING';
+    return { paymentId, outcome, gatewayRef: String(p.payment_id), amountCents: Math.round(Number(p.amount) * 100), currency: p.currency, method: p.method };
   }
 
   async refund(input: { paymentId: string; gatewayRef: string | null; amountCents: number; reason: string }) {
-    logger.warn({ ...input }, 'PayHere refund must be processed manually in the merchant portal');
-    return { refundRef: `MANUAL-${input.gatewayRef ?? input.paymentId}` };
+    if (!this.hasApiCreds() || !input.gatewayRef) {
+      logger.warn({ ...input }, 'PayHere API credentials missing: refund must be processed manually in the merchant portal');
+      return { refundRef: `MANUAL-${input.gatewayRef ?? input.paymentId}` };
+    }
+    const r = await this.api<{ status: number; msg?: string; data?: unknown }>('/payment/refund', {
+      method: 'POST',
+      body: JSON.stringify({ payment_id: input.gatewayRef, description: input.reason, amount: Number((input.amountCents / 100).toFixed(2)) }),
+    });
+    if (r.status !== 1) throw new Error(`PayHere refund rejected: ${r.msg ?? 'unknown error'}`);
+    return { refundRef: String(r.data ?? input.gatewayRef) };
   }
 }
