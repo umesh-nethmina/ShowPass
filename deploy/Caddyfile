@@ -1,0 +1,7 @@
+# Public entry point. Caddy obtains and renews a TLS certificate for $DOMAIN automatically
+# and redirects HTTP to HTTPS (SRS 2.5: all traffic uses HTTPS).
+{$DOMAIN} {
+  encode gzip
+  header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  reverse_proxy web:80
+}

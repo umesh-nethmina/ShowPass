@@ -7,6 +7,8 @@ process.env.TZ = process.env.APP_TIMEZONE || 'Asia/Colombo';
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
+  /** Number of reverse proxies in front of the API (e.g. Caddy + nginx = 2), for correct client IPs. */
+  TRUST_PROXY: z.coerce.number().int().min(0).default(1),
   WEB_ORIGIN: z.string().default('http://localhost:5180'),
   PUBLIC_API_URL: z.string().default('http://localhost:4000'),
   DATABASE_URL: z.string(),

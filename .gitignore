@@ -7,3 +7,5 @@ apps/api/storage/
 *.tsbuildinfo
 test-results/
 playwright-report/
+.env.production
+backups/

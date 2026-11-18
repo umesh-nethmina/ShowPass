@@ -19,7 +19,7 @@ import { adminRouter } from './modules/admin/index.js';
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  if (isProd) app.set('trust proxy', 1); // HTTPS terminated at the reverse proxy
+  if (isProd) app.set('trust proxy', env.TRUST_PROXY); // HTTPS is terminated at the reverse proxy
 
   app.use(helmet());
   app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));

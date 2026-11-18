@@ -1,0 +1,92 @@
+# Production stack:  docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+# See docs/DEPLOYMENT.md.
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web]
+
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    restart: unless-stopped
+    depends_on: [api]
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      TRUST_PROXY: 2 # caddy + nginx
+      WEB_ORIGIN: https://${DOMAIN}
+      PUBLIC_API_URL: https://${DOMAIN}
+      DATABASE_URL: postgresql://showpass:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/showpass?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      QR_SECRET: ${QR_SECRET:?set QR_SECRET}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Colombo}
+      PAYMENT_GATEWAY: ${PAYMENT_GATEWAY:-payhere}
+      PAYHERE_MERCHANT_ID: ${PAYHERE_MERCHANT_ID:-}
+      PAYHERE_MERCHANT_SECRET: ${PAYHERE_MERCHANT_SECRET:-}
+      PAYHERE_APP_ID: ${PAYHERE_APP_ID:-}
+      PAYHERE_APP_SECRET: ${PAYHERE_APP_SECRET:-}
+      PAYHERE_SANDBOX: ${PAYHERE_SANDBOX:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-ShowPass <tickets@example.com>}
+      SMS_PROVIDER: ${SMS_PROVIDER:-console}
+      SMS_HTTP_URL: ${SMS_HTTP_URL:-}
+      SMS_HTTP_TOKEN: ${SMS_HTTP_TOKEN:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: showpass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: showpass
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U showpass"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+
+  # NFR-16: daily pg_dump, 30-day retention, into ./backups on the host.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: showpass
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: showpass
+      RETENTION_DAYS: 30
+    volumes:
+      - ./deploy/backup.sh:/backup.sh:ro
+      - ./backups:/backups
+    depends_on:
+      postgres: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
