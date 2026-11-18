@@ -37,7 +37,7 @@ export default function Shows() {
       const startTimes = form.times
         .split(/[,\s]+/)
         .filter(Boolean)
-        .map((t) => new Date(`${form.date}T${t.padStart(5, '0')}:00`).toISOString());
+        .map((t) => `${form.date}T${t.padStart(5, '0')}:00`); // cinema-local time, interpreted by the API
       const movie = movies.data?.movies.find((m) => m.id === form.movieId);
       return api.post<{ shows: unknown[] }>('/admin/shows', { movieId: form.movieId, screenId: form.screenId, language: form.language || movie?.language || 'English', startTimes });
     },

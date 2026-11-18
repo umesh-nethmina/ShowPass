@@ -200,6 +200,20 @@ describe('payment and tickets (FR-5.x, FR-6.x, FR-8.x)', () => {
     expect(res.status).toBe(401);
   });
 
+  it('accepts gateway webhooks without the browser CSRF header', async () => {
+    const { app } = await import('./helpers.js');
+    const { default: request } = await import('supertest');
+    const { mockSignature } = await import('../src/modules/payments/mock.gateway.js');
+    const { show, seats } = await createFixture();
+    const { agent: a } = await loginAs();
+    const hold = await a.post(`/api/shows/${show.id}/holds`, { seatIds: [seats[0].id] });
+    const pay = await a.post(`/api/bookings/${hold.body.booking.id}/pay`);
+    const body = { paymentId: pay.body.paymentId, outcome: 'SUCCESS', amountCents: 100000, signature: mockSignature(pay.body.paymentId, 'SUCCESS', 100000) };
+    const res = await request(app).post('/api/payments/webhook/mock').send(body);
+    expect(res.status).toBe(200);
+    expect((await prisma.booking.findUniqueOrThrow({ where: { id: hold.body.booking.id } })).status).toBe('CONFIRMED');
+  });
+
   it('releases seats when payment fails (FR-5.6)', async () => {
     const { show, seats } = await createFixture();
     const { agent: a } = await loginAs();

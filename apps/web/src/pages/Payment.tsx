@@ -61,13 +61,22 @@ export function MockGateway() {
 export function PaymentResult() {
   const [params] = useSearchParams();
   const paymentId = params.get('payment');
+  const cancelled = params.get('cancelled') === '1';
   const [timedOut, setTimedOut] = useState(false);
+  const [released, setReleased] = useState(false);
   const { data, error } = useQuery({
     queryKey: ['payment', paymentId, 'result'],
     queryFn: () => api.get<PaymentStatus>(`/payments/${paymentId}`),
     enabled: !!paymentId,
-    refetchInterval: (q) => (q.state.data?.payment.status === 'INITIATED' && !timedOut ? 2000 : false),
+    refetchInterval: (q) => (q.state.data?.payment.status === 'INITIATED' && !timedOut && !cancelled ? 2000 : false),
   });
+  // Customer pressed "cancel" on the gateway page: free the seats now instead of waiting for the hold to lapse.
+  useEffect(() => {
+    if (cancelled && data?.payment.status === 'INITIATED' && data.booking.status === 'PENDING' && !released) {
+      setReleased(true);
+      api.delete(`/bookings/${data.booking.id}/hold`).catch(() => {});
+    }
+  }, [cancelled, data, released]);
   useEffect(() => {
     const t = setTimeout(() => setTimedOut(true), 60_000);
     return () => clearTimeout(t);
@@ -78,6 +87,17 @@ export function PaymentResult() {
   if (!data) return <Spinner label="Checking your payment" />;
 
   const { payment, booking } = data;
+  if (cancelled && booking.status !== 'CONFIRMED') {
+    return (
+      <div className="container-page max-w-lg py-12 text-center">
+        <h1 className="font-display text-4xl tracking-wide">Payment cancelled</h1>
+        <p className="mt-2 text-zinc-300">You have not been charged and your seats have been released.</p>
+        <Link to="/" className="btn-primary mt-6">
+          Back to movies
+        </Link>
+      </div>
+    );
+  }
   return (
     <div className="container-page max-w-lg py-12 text-center">
       {booking.status === 'CONFIRMED' ? (

@@ -127,22 +127,32 @@ export default function MovieDetail() {
                     <h3 className="font-semibold">{cinema.name}</h3>
                     <p className="text-xs text-zinc-400">{cinema.address}</p>
                     <ul className="mt-3 flex flex-wrap gap-2">
-                      {shows.map((s) => (
-                        <li key={s.id}>
-                          <Link
-                            to={`/shows/${s.id}`}
-                            aria-disabled={s.availability === 'SOLD_OUT'}
-                            className={`flex flex-col items-center rounded-lg border px-4 py-2 text-center ${AVAIL[s.availability].cls}`}
-                            aria-label={`${time(s.startTime)}, ${s.screen.name}, ${FORMAT_LABEL[s.screen.format]}, ${s.language}, ${AVAIL[s.availability].label}`}
-                          >
+                      {shows.map((s) => {
+                        const inner = (
+                          <>
                             <span className="text-base font-bold">{time(s.startTime)}</span>
                             <span className="text-[11px] text-zinc-400">
                               {s.screen.name} · {FORMAT_LABEL[s.screen.format]} · {s.language}
                             </span>
                             <span className="text-[11px]">{AVAIL[s.availability].label}</span>
-                          </Link>
-                        </li>
-                      ))}
+                          </>
+                        );
+                        const cls = `flex flex-col items-center rounded-lg border px-4 py-2 text-center ${AVAIL[s.availability].cls}`;
+                        const label = `${time(s.startTime)}, ${s.screen.name}, ${FORMAT_LABEL[s.screen.format]}, ${s.language}, ${AVAIL[s.availability].label}`;
+                        return (
+                          <li key={s.id}>
+                            {s.availability === 'SOLD_OUT' ? (
+                              <span className={cls} aria-label={label}>
+                                {inner}
+                              </span>
+                            ) : (
+                              <Link to={`/shows/${s.id}`} className={cls} aria-label={label}>
+                                {inner}
+                              </Link>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ))}

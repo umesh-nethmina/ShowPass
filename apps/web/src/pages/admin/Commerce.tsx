@@ -52,8 +52,8 @@ export function PromoCodes() {
         value: Number(f.value),
         maxDiscount: num(f.maxDiscount),
         minAmount: num(f.minAmount),
-        validFrom: new Date(`${f.validFrom}T00:00:00`).toISOString(),
-        validTo: new Date(`${f.validTo}T23:59:59`).toISOString(),
+        validFrom: `${f.validFrom}T00:00:00`, // cinema-local, interpreted by the API
+        validTo: `${f.validTo}T23:59:59`,
         usageLimit: num(f.usageLimit),
         isActive: f.isActive,
       };

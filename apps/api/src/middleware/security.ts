@@ -12,7 +12,8 @@ import { isTest } from '../config/env.js';
  */
 export function csrfGuard(req: Request, _res: Response, next: NextFunction) {
   const safe = ['GET', 'HEAD', 'OPTIONS'].includes(req.method);
-  if (safe || req.path.startsWith('/api/payments/webhook')) return next();
+  // originalUrl, not path: this middleware is mounted under /api, so req.path has the prefix stripped.
+  if (safe || req.originalUrl.startsWith('/api/payments/webhook/')) return next();
   if (req.get('X-Requested-With') !== 'ShowPass') {
     return next(new AppError(403, 'CSRF', 'Missing request header'));
   }
@@ -26,6 +27,8 @@ function limiter(prefix: string, windowMs: number, limit: number) {
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     skip: () => isTest,
+    // If Redis is unreachable, keep serving rather than failing every request.
+    passOnStoreError: true,
     handler: (_req, _res, next) => next(new AppError(429, 'RATE_LIMITED', 'Too many attempts. Please wait and try again.')),
   };
   if (redis) {
@@ -41,5 +44,5 @@ function limiter(prefix: string, windowMs: number, limit: number) {
 
 /** NFR-8: rate limit login and OTP endpoints */
 export const loginLimiter = limiter('login', 15 * 60 * 1000, 10);
-export const otpLimiter = limiter('otp', 15 * 60 * 1000, 5);
+export const otpLimiter = limiter('otp', 15 * 60 * 1000, 10);
 export const apiLimiter = limiter('api', 60 * 1000, 300);

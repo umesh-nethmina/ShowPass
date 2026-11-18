@@ -28,8 +28,12 @@ export function createApp() {
   if (env.NODE_ENV !== 'test') app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 
   app.get('/api/health', async (_req, res) => {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ ok: true });
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ ok: true });
+    } catch {
+      res.status(503).json({ ok: false });
+    }
   });
 
   app.use('/api', apiLimiter, csrfGuard, loadUser);
