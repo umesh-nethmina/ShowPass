@@ -15,6 +15,7 @@ import { sendCancellationNotice } from '../tickets/ticket.notify.js';
 
 export const bookingInclude = {
   seats: { orderBy: { label: 'asc' as const } },
+  items: { orderBy: { name: 'asc' as const } },
   promoCode: { select: { code: true } },
   show: {
     include: {
@@ -192,11 +193,55 @@ export async function applyPromo(user: AuthUser, bookingId: string, code: string
     promoCodeId = promo.id;
   }
 
-  const totals = computeTotals(seatCents, settings, discount);
+  const totals = computeTotals(seatCents, settings, discount, toCents(booking.itemsTotal));
   return prisma.booking.update({
     where: { id: booking.id },
     data: { promoCodeId, discount: dec(totals.discount), tax: dec(totals.tax), total: dec(totals.total) },
     include: bookingInclude,
+  });
+}
+
+export const MAX_ITEM_QUANTITY = 10;
+
+/** Food & drinks on sale for a cinema: its own items plus those sold everywhere. */
+export function concessionsForCinema(cinemaId: string) {
+  return prisma.concession.findMany({
+    where: { isActive: true, OR: [{ cinemaId }, { cinemaId: null }] },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+  });
+}
+
+/** FR-5.5: replace the food & drink lines on a pending booking and recompute its totals. */
+export async function setBookingItems(user: AuthUser, bookingId: string, lines: { concessionId: string; quantity: number }[]) {
+  const booking = await assertPendingAndLive(user, bookingId);
+  const wanted = lines.filter((l) => l.quantity > 0);
+  if (new Set(wanted.map((l) => l.concessionId)).size !== wanted.length) throw badRequest('DUPLICATE_ITEM', 'Each item can be listed once');
+  if (wanted.some((l) => l.quantity > MAX_ITEM_QUANTITY)) throw badRequest('TOO_MANY_ITEMS', `You can add up to ${MAX_ITEM_QUANTITY} of each item`);
+
+  const available = await concessionsForCinema(booking.show.screen.cinema.id);
+  const byId = new Map(available.map((c) => [c.id, c]));
+  const missing = wanted.filter((l) => !byId.has(l.concessionId));
+  if (missing.length) throw badRequest('ITEM_UNAVAILABLE', 'Some items are not available at this cinema');
+
+  const settings = await getSettings();
+  const itemsCents = wanted.reduce((sum, l) => sum + toCents(byId.get(l.concessionId)!.price) * l.quantity, 0);
+  const totals = computeTotals(booking.seats.map((s: BookingSeat) => toCents(s.price)), settings, toCents(booking.discount), itemsCents);
+
+  return prisma.$transaction(async (tx) => {
+    await tx.bookingItem.deleteMany({ where: { bookingId: booking.id } });
+    if (wanted.length) {
+      await tx.bookingItem.createMany({
+        data: wanted.map((l) => {
+          const c = byId.get(l.concessionId)!;
+          return { bookingId: booking.id, concessionId: c.id, name: c.name, unitPrice: c.price, quantity: l.quantity };
+        }),
+      });
+    }
+    return tx.booking.update({
+      where: { id: booking.id },
+      data: { itemsTotal: dec(totals.items), tax: dec(totals.tax), total: dec(totals.total) },
+      include: bookingInclude,
+    });
   });
 }
 

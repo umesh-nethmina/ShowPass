@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import QRCode from 'qrcode';
 import { h } from '../../lib/http.js';
+import { toCents } from '../../lib/money.js';
 import { badRequest } from '../../lib/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { requireAuth } from '../../middleware/auth.js';
@@ -34,6 +35,28 @@ bookingRouter.post(
   validate(z.object({ code: z.string().trim().max(40).nullable() })),
   h(async (req, res) => {
     const b = await bookings.applyPromo(req.user!, req.params.id, req.body.code || null);
+    res.json({ booking: await presentBooking(b) });
+  }),
+);
+
+/** FR-5.5: food & drinks on sale at this booking's cinema. */
+bookingRouter.get(
+  '/:id/concessions',
+  h(async (req, res) => {
+    const b = await bookings.getOwnBooking(req.user!, req.params.id);
+    const list = await bookings.concessionsForCinema(b.show.screen.cinema.id);
+    res.json({
+      concessions: list.map((c) => ({ id: c.id, name: c.name, description: c.description, imageUrl: c.imageUrl, priceCents: toCents(c.price) })),
+      maxQuantity: bookings.MAX_ITEM_QUANTITY,
+    });
+  }),
+);
+
+bookingRouter.put(
+  '/:id/items',
+  validate(z.object({ items: z.array(z.object({ concessionId: z.string().min(1).max(40), quantity: z.number().int().min(0).max(99) })).max(30) })),
+  h(async (req, res) => {
+    const b = await bookings.setBookingItems(req.user!, req.params.id, req.body.items);
     res.json({ booking: await presentBooking(b) });
   }),
 );

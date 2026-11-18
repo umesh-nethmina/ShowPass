@@ -143,9 +143,10 @@ model Cinema {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  screens    Screen[]
-  priceRules PriceRule[]
-  staff      User[]
+  screens     Screen[]
+  priceRules  PriceRule[]
+  staff       User[]
+  concessions Concession[]
 }
 
 model Screen {
@@ -242,7 +243,10 @@ model Booking {
   user           User          @relation(fields: [userId], references: [id])
   showId         String
   show           Show          @relation(fields: [showId], references: [id])
+  /// Ticket subtotal (seats only).
   subtotal       Decimal       @db.Decimal(10, 2)
+  /// Food & drink total (FR-5.5).
+  itemsTotal     Decimal       @default(0) @db.Decimal(10, 2)
   convenienceFee Decimal       @default(0) @db.Decimal(10, 2)
   tax            Decimal       @default(0) @db.Decimal(10, 2)
   discount       Decimal       @default(0) @db.Decimal(10, 2)
@@ -264,6 +268,7 @@ model Booking {
   seats     BookingSeat[]
   showSeats ShowSeat[]
   payments  Payment[]
+  items     BookingItem[]
 
   @@index([userId, createdAt])
   @@index([status, holdExpiresAt])
@@ -364,4 +369,34 @@ model Setting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+/// Food & drink combo that can be added to a booking (FR-5.5). cinemaId null = sold at every cinema.
+model Concession {
+  id          String   @id @default(cuid())
+  cinemaId    String?
+  cinema      Cinema?  @relation(fields: [cinemaId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  items BookingItem[]
+}
+
+/// Snapshot of a food & drink line on a booking.
+model BookingItem {
+  id           String     @id @default(cuid())
+  bookingId    String
+  booking      Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  concessionId String
+  concession   Concession @relation(fields: [concessionId], references: [id])
+  name         String
+  unitPrice    Decimal    @db.Decimal(10, 2)
+  quantity     Int
+
+  @@unique([bookingId, concessionId])
 }

@@ -48,20 +48,29 @@ export function promoDiscount(promo: PromoLike, subtotalCents: number): number {
 
 export interface Totals {
   subtotal: number;
+  items: number;
   convenienceFee: number;
   tax: number;
   discount: number;
   total: number;
 }
 
-/** FR-5.1: subtotal, fees, taxes, discount and total (all cents). Discount applies to ticket subtotal; tax on (subtotal - discount + fee). */
-export function computeTotals(seatPricesCents: number[], settings: Pick<Settings, 'convenienceFeePerTicket' | 'taxPercent'>, discountCents = 0): Totals {
+/**
+ * FR-5.1: ticket subtotal, food & drinks, fees, taxes, discount and total (all cents).
+ * Promo discounts apply to tickets only; tax applies to (tickets - discount + fees + food).
+ */
+export function computeTotals(
+  seatPricesCents: number[],
+  settings: Pick<Settings, 'convenienceFeePerTicket' | 'taxPercent'>,
+  discountCents = 0,
+  itemsCents = 0,
+): Totals {
   const subtotal = seatPricesCents.reduce((a, b) => a + b, 0);
   const convenienceFee = Math.round(settings.convenienceFeePerTicket * 100) * seatPricesCents.length;
   const discount = Math.min(discountCents, subtotal);
-  const taxable = subtotal - discount + convenienceFee;
+  const taxable = subtotal - discount + convenienceFee + itemsCents;
   const tax = Math.round((taxable * settings.taxPercent) / 100);
-  return { subtotal, convenienceFee, tax, discount, total: taxable + tax };
+  return { subtotal, items: itemsCents, convenienceFee, tax, discount, total: taxable + tax };
 }
 
 /** FR-7.2: refund percent for a cancellation made `hoursBefore` hours before the show. */

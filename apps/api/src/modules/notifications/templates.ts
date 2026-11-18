@@ -31,6 +31,7 @@ export interface TicketEmailData {
   screen: string;
   startsAt: string;
   seats: string;
+  items?: string;
   total: string;
 }
 
@@ -41,6 +42,7 @@ export function ticketEmail(d: TicketEmailData) {
     ['Cinema', `${d.cinema} · ${d.screen}`],
     ['Date & time', d.startsAt],
     ['Seats', d.seats],
+    ...(d.items ? [['Food & drinks', d.items]] : []),
     ['Total paid', d.total],
   ]
     .map(([k, v]) => `<tr><td style="color:#a1a1aa;padding:4px 12px 4px 0">${k}</td><td style="padding:4px 0"><b>${esc(v)}</b></td></tr>`)

@@ -41,6 +41,7 @@ checkerRouter.post(
       where: token.startsWith('SP-') ? { reference: token.toUpperCase() } : { qrToken: token },
       include: {
         seats: { orderBy: { label: 'asc' } },
+        items: { orderBy: { name: 'asc' } },
         user: { select: { name: true } },
         show: { include: { movie: { select: { title: true } }, screen: { select: { name: true, cinemaId: true } } } },
       },
@@ -58,6 +59,7 @@ checkerRouter.post(
           screen: booking.show.screen.name,
           startTime: booking.show.startTime,
           seats: booking.seats.map((s) => s.label),
+          items: booking.items.map((i) => `${i.quantity}× ${i.name}`),
           checkedInAt: booking.checkedInAt,
         },
       });

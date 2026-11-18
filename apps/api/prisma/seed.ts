@@ -49,6 +49,7 @@ async function main() {
     prisma.auditLog.deleteMany(),
     prisma.payment.deleteMany(),
     prisma.bookingSeat.deleteMany(),
+    prisma.bookingItem.deleteMany(),
     prisma.showSeat.deleteMany(),
     prisma.booking.deleteMany(),
     prisma.show.deleteMany(),
@@ -62,6 +63,7 @@ async function main() {
     prisma.cinema.deleteMany(),
     prisma.movie.deleteMany(),
     prisma.promoCode.deleteMany(),
+    prisma.concession.deleteMany(),
     prisma.setting.deleteMany(),
   ]);
 
@@ -161,6 +163,16 @@ async function main() {
     data: [
       { code: 'WELCOME10', description: '10% off, up to LKR 500', type: 'PERCENT', value: 10, maxDiscount: 500, validFrom: now, validTo: inThreeMonths, usageLimit: 1000 },
       { code: 'FLAT300', description: 'LKR 300 off bookings over LKR 2,000', type: 'FIXED', value: 300, minAmount: 2000, validFrom: now, validTo: inThreeMonths },
+    ],
+  });
+
+  await prisma.concession.createMany({
+    data: [
+      { name: 'Classic popcorn combo', description: 'Large salted popcorn + 2 soft drinks', price: 1450, sortOrder: 1 },
+      { name: 'Caramel popcorn (regular)', description: 'Sweet caramel popcorn', price: 750, sortOrder: 2 },
+      { name: 'Nachos with cheese', description: 'Tortilla chips with warm cheese dip', price: 950, sortOrder: 3 },
+      { name: 'Iced coffee', description: '500 ml', price: 650, sortOrder: 4 },
+      { name: 'Kandy kottu box', description: 'Chicken kottu, served in the lobby', price: 1250, sortOrder: 5, cinemaId: cinemas[1].id },
     ],
   });
 

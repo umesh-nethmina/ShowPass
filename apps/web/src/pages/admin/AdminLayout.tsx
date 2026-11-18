@@ -10,6 +10,7 @@ const LINKS: { to: string; label: string; superOnly?: boolean }[] = [
   { to: '/admin/shows', label: 'Showtimes' },
   { to: '/admin/pricing', label: 'Pricing' },
   { to: '/admin/promo-codes', label: 'Promo codes' },
+  { to: '/admin/food', label: 'Food & drinks' },
   { to: '/admin/bookings', label: 'Bookings' },
   { to: '/admin/reports', label: 'Reports' },
   { to: '/admin/reviews', label: 'Reviews' },

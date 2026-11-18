@@ -99,6 +99,7 @@ export function BookingDetail() {
             <Info label="Cinema" value={b.show.cinema.name} />
             <Info label="Screen" value={b.show.screen.name} />
             <Info label="Seats" value={b.seats.map((s) => s.label).join(', ')} />
+            {b.items.length > 0 && <Info label="Food & drinks" value={b.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')} wide />}
             <Info label="Booking ID" value={b.reference} />
             <Info label="Total paid" value={money(b.totalCents, b.currency)} />
             {b.refundCents != null && <Info label="Refund" value={money(b.refundCents, b.currency)} />}

@@ -118,6 +118,7 @@ export default function Checkout() {
               ))}
             </tbody>
           </table>
+          {!expired && <FoodAndDrinks booking={booking} onChange={(b) => qc.setQueryData(key, { booking: b })} />}
         </section>
 
         <aside className="space-y-4">
@@ -152,6 +153,7 @@ export default function Checkout() {
           <div className="card p-4">
             <dl className="space-y-1.5 text-sm">
               <Row label="Tickets" value={money(booking.subtotalCents, booking.currency)} />
+              {booking.itemsCents > 0 && <Row label="Food & drinks" value={money(booking.itemsCents, booking.currency)} />}
               {booking.convenienceFeeCents > 0 && <Row label="Convenience fee" value={money(booking.convenienceFeeCents, booking.currency)} />}
               {booking.taxCents > 0 && <Row label="Taxes" value={money(booking.taxCents, booking.currency)} />}
               {booking.discountCents > 0 && <Row label="Discount" value={`− ${money(booking.discountCents, booking.currency)}`} accent />}
@@ -184,6 +186,66 @@ function Row({ label, value, accent }: { label: string; value: string; accent?: 
     <div className={`flex justify-between ${accent ? 'text-emerald-300' : ''}`}>
       <dt className={accent ? '' : 'text-zinc-400'}>{label}</dt>
       <dd className="tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+interface Concession {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  priceCents: number;
+}
+
+/** FR-5.5: optional food & drink combos, collected at the counter with the e-ticket. */
+function FoodAndDrinks({ booking, onChange }: { booking: Booking; onChange: (b: Booking) => void }) {
+  const menu = useQuery({
+    queryKey: ['concessions', booking.id],
+    queryFn: () => api.get<{ concessions: Concession[]; maxQuantity: number }>(`/bookings/${booking.id}/concessions`),
+  });
+  const update = useMutation({
+    mutationFn: (items: { concessionId: string; quantity: number }[]) => api.put<{ booking: Booking }>(`/bookings/${booking.id}/items`, { items }),
+    onSuccess: (d) => onChange(d.booking),
+  });
+  if (!menu.data?.concessions.length) return null;
+  const max = menu.data.maxQuantity;
+  const qty = new Map(booking.items.map((i) => [i.concessionId, i.quantity]));
+  const setQty = (id: string, n: number) => {
+    const next = new Map(qty);
+    next.set(id, Math.max(0, Math.min(max, n)));
+    update.mutate([...next.entries()].filter(([, q]) => q > 0).map(([concessionId, quantity]) => ({ concessionId, quantity })));
+  };
+  return (
+    <div className="mt-6 border-t border-ink-700 pt-4">
+      <h3 className="font-semibold">Add food & drinks</h3>
+      <p className="text-xs text-zinc-400">Optional. Collect at the counter by showing your e-ticket.</p>
+      <ul className="mt-3 space-y-2">
+        {menu.data.concessions.map((c) => {
+          const n = qty.get(c.id) ?? 0;
+          return (
+            <li key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-ink-700 p-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{c.name}</p>
+                {c.description && <p className="truncate text-xs text-zinc-400">{c.description}</p>}
+                <p className="text-xs text-gold-400">{money(c.priceCents, booking.currency)}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2" role="group" aria-label={`Quantity of ${c.name}`}>
+                <button type="button" className="btn-secondary btn-sm w-9 px-0" disabled={n === 0 || update.isPending} onClick={() => setQty(c.id, n - 1)} aria-label={`Remove one ${c.name}`}>
+                  −
+                </button>
+                <span className="w-5 text-center tabular-nums" aria-live="polite">
+                  {n}
+                </span>
+                <button type="button" className="btn-secondary btn-sm w-9 px-0" disabled={n >= max || update.isPending} onClick={() => setQty(c.id, n + 1)} aria-label={`Add one ${c.name}`}>
+                  +
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {update.error && <p className="mt-2 text-xs text-red-400">{errorMessage(update.error)}</p>}
     </div>
   );
 }

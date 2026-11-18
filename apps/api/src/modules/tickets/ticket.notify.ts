@@ -13,7 +13,7 @@ const FORMAT_LABEL = { TWO_D: '2D', THREE_D: '3D', IMAX: 'IMAX' } as const;
 export async function loadTicketData(bookingId: string): Promise<TicketData & { email: string; phone: string | null }> {
   const b = await prisma.booking.findUniqueOrThrow({
     where: { id: bookingId },
-    include: { user: true, seats: { orderBy: { label: 'asc' } }, show: { include: { movie: true, screen: { include: { cinema: true } } } } },
+    include: { user: true, seats: { orderBy: { label: 'asc' } }, items: { orderBy: { name: 'asc' } }, show: { include: { movie: true, screen: { include: { cinema: true } } } } },
   });
   const settings = await getSettings();
   return {
@@ -30,6 +30,7 @@ export async function loadTicketData(bookingId: string): Promise<TicketData & { 
     format: `${FORMAT_LABEL[b.show.screen.format]} · ${b.show.language}`,
     startTime: b.show.startTime,
     seats: b.seats.map((s) => s.label),
+    items: b.items.map((i) => `${i.quantity}× ${i.name}`),
     totalCents: toCents(b.total),
     currency: settings.currency,
     status: b.status,
@@ -45,7 +46,7 @@ export async function sendTicketNotifications(bookingId: string) {
   await Promise.allSettled([
     sendEmail({
       to: t.email,
-      ...ticketEmail({ name: t.customerName, reference: t.reference, movie: t.movieTitle, cinema: t.cinemaName, screen: t.screenName, startsAt, seats: t.seats.join(', '), total }),
+      ...ticketEmail({ name: t.customerName, reference: t.reference, movie: t.movieTitle, cinema: t.cinemaName, screen: t.screenName, startsAt, seats: t.seats.join(', '), items: t.items.join(', '), total }),
       attachments: [{ filename: `ShowPass-${t.reference}.pdf`, content: pdf, contentType: 'application/pdf' }],
     }),
     t.phone && sendSms(t.phone, `ShowPass: booking ${t.reference} confirmed. ${t.movieTitle}, ${startsAt}, ${t.cinemaName}. Seats ${t.seats.join(',')}. Show the QR in your email at entry.`),

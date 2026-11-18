@@ -27,7 +27,9 @@ describe('resolvePrice (FR-9.4)', () => {
 describe('totals, promos and refunds (FR-5.1, FR-5.4, FR-7.2)', () => {
   it('computes fees, tax and discount', () => {
     const t = computeTotals([100000, 150000], { convenienceFeePerTicket: 50, taxPercent: 10 }, 20000);
-    expect(t).toEqual({ subtotal: 250000, convenienceFee: 10000, discount: 20000, tax: 24000, total: 264000 });
+    expect(t).toEqual({ subtotal: 250000, items: 0, convenienceFee: 10000, discount: 20000, tax: 24000, total: 264000 });
+    const withFood = computeTotals([100000], { convenienceFeePerTicket: 0, taxPercent: 10 }, 50000, 30000);
+    expect(withFood).toMatchObject({ discount: 50000, items: 30000, tax: 8000, total: 88000 });
   });
   it('caps percent promos and respects minimum spend', () => {
     expect(promoDiscount({ type: 'PERCENT', valueCents: 1000, maxDiscountCents: 50000, minAmountCents: null }, 1_000_000)).toBe(50000);

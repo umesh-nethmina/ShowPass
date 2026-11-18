@@ -8,7 +8,7 @@ type Result = 'VALID' | 'ALREADY_USED' | 'CANCELLED' | 'WRONG_SHOW' | 'NOT_FOUND
 interface ScanResponse {
   result: Result;
   message: string;
-  booking: { reference: string; customer: string; movie: string; screen: string; startTime: string; seats: string[]; checkedInAt: string | null } | null;
+  booking: { reference: string; customer: string; movie: string; screen: string; startTime: string; seats: string[]; items?: string[]; checkedInAt: string | null } | null;
 }
 
 const STYLE: Record<Result, { bg: string; title: string }> = {
@@ -126,6 +126,7 @@ export default function Checker() {
                 {time(res.booking.startTime)} · {res.booking.screen}
               </p>
               <p className="text-xl font-bold">Seats {res.booking.seats.join(', ')}</p>
+              {!!res.booking.items?.length && <p>Food & drinks: {res.booking.items.join(', ')}</p>}
               <p>
                 {res.booking.reference} · {res.booking.customer}
               </p>

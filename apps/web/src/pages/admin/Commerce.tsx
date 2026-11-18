@@ -402,3 +402,122 @@ export function Reports() {
     </>
   );
 }
+
+/* ---------------- food & drinks (FR-5.5) ---------------- */
+
+interface AdminConcession {
+  id: string;
+  cinemaId: string | null;
+  cinema: { name: string } | null;
+  name: string;
+  description: string | null;
+  price: number;
+  imageUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export function Concessions() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const cinemas = useCinemas();
+  const { data, isLoading } = useQuery({ queryKey: ['admin', 'concessions'], queryFn: () => api.get<{ concessions: AdminConcession[] }>('/admin/concessions') });
+  const isSuper = user?.role === 'SUPER_ADMIN';
+  const blank = { cinemaId: isSuper ? '' : (user?.cinemaId ?? ''), name: '', description: '', price: '', isActive: true, sortOrder: '0' };
+  const [edit, setEdit] = useState<{ id: string | null; f: typeof blank } | null>(null);
+  const save = useMutation({
+    mutationFn: () => {
+      const f = edit!.f;
+      const body = { cinemaId: f.cinemaId || null, name: f.name, description: f.description || null, price: Number(f.price), isActive: f.isActive, sortOrder: Number(f.sortOrder) };
+      return edit!.id ? api.put(`/admin/concessions/${edit!.id}`, body) : api.post('/admin/concessions', body);
+    },
+    onSuccess: () => {
+      setEdit(null);
+      qc.invalidateQueries({ queryKey: ['admin', 'concessions'] });
+    },
+  });
+  if (isLoading) return <Spinner />;
+  const set = (patch: Partial<typeof blank>) => setEdit((e) => e && { ...e, f: { ...e.f, ...patch } });
+  const canEdit = (c: AdminConcession) => isSuper || (c.cinemaId !== null && c.cinemaId === user?.cinemaId);
+  return (
+    <>
+      <AdminTitle actions={!edit && <button className="btn-primary" onClick={() => setEdit({ id: null, f: blank })}>+ New item</button>}>Food & drinks</AdminTitle>
+      {edit && (
+        <form
+          className="card mb-6 grid gap-4 p-5 md:grid-cols-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+        >
+          {save.error && <div className="md:col-span-3"><Alert>{errorMessage(save.error)}</Alert></div>}
+          <Field label="Name" required value={edit.f.name} onChange={(e) => set({ name: e.target.value })} />
+          <Field label="Price (LKR)" type="number" min={0} step="0.01" required value={edit.f.price} onChange={(e) => set({ price: e.target.value })} />
+          <Select label="Sold at" value={edit.f.cinemaId} onChange={(e) => set({ cinemaId: e.target.value })} disabled={!isSuper}>
+            {isSuper && <option value="">Every cinema</option>}
+            {cinemas.data?.cinemas.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+          <Field label="Description" value={edit.f.description} onChange={(e) => set({ description: e.target.value })} />
+          <Field label="Sort order" type="number" min={0} value={edit.f.sortOrder} onChange={(e) => set({ sortOrder: e.target.value })} />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={edit.f.isActive} onChange={(e) => set({ isActive: e.target.checked })} /> On sale
+          </label>
+          <div className="flex gap-2 md:col-span-3">
+            <button className="btn-primary" disabled={save.isPending}>
+              Save
+            </button>
+            <button type="button" className="btn-ghost" onClick={() => setEdit(null)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      {!data?.concessions.length ? (
+        <Empty title="No food or drinks yet" />
+      ) : (
+        <div className="card overflow-x-auto">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Price</th>
+                <th>Sold at</th>
+                <th>Status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {data.concessions.map((c) => (
+                <tr key={c.id}>
+                  <td>
+                    <span className="font-semibold">{c.name}</span>
+                    {c.description && <span className="block text-xs text-zinc-500">{c.description}</span>}
+                  </td>
+                  <td className="tabular-nums">{money(c.price * 100)}</td>
+                  <td>{c.cinema?.name ?? 'Every cinema'}</td>
+                  <td>{c.isActive ? <span className="text-emerald-400">On sale</span> : <span className="text-zinc-500">Hidden</span>}</td>
+                  <td className="text-right">
+                    {canEdit(c) && (
+                      <button
+                        className="btn-secondary btn-sm"
+                        onClick={() =>
+                          setEdit({ id: c.id, f: { cinemaId: c.cinemaId ?? '', name: c.name, description: c.description ?? '', price: String(c.price), isActive: c.isActive, sortOrder: String(c.sortOrder) } })
+                        }
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}

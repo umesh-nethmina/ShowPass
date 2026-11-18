@@ -16,6 +16,8 @@ export interface TicketData {
   format: string;
   startTime: Date;
   seats: string[];
+  /** e.g. "2× Popcorn combo" */
+  items: string[];
   totalCents: number;
   currency: string;
   status: string;
@@ -50,6 +52,7 @@ export async function renderTicketPdf(t: TicketData): Promise<Buffer> {
   row('Date & time', formatShowTime(t.startTime));
   row('Cinema', `${t.cinemaName} – ${t.screenName}`);
   row('Seats', t.seats.join(', '));
+  if (t.items.length) row('Food & drinks (collect at the counter)', t.items.join(', '));
   row('Booking ID', t.reference);
   row('Name', t.customerName);
   row('Total paid', formatMoney(t.totalCents, t.currency));

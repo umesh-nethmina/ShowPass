@@ -15,6 +15,7 @@ export async function presentBooking(b: FullBooking) {
     status: b.status,
     currency: settings.currency,
     subtotalCents: toCents(b.subtotal),
+    itemsCents: toCents(b.itemsTotal),
     convenienceFeeCents: toCents(b.convenienceFee),
     taxCents: toCents(b.tax),
     discountCents: toCents(b.discount),
@@ -28,6 +29,7 @@ export async function presentBooking(b: FullBooking) {
     createdAt: b.createdAt,
     qrToken: b.status === 'CONFIRMED' ? b.qrToken : null,
     seats: b.seats.map((s) => ({ seatId: s.seatId, label: s.label, category: s.category, priceCents: toCents(s.price) })),
+    items: b.items.map((i) => ({ concessionId: i.concessionId, name: i.name, unitPriceCents: toCents(i.unitPrice), quantity: i.quantity })),
     show: {
       id: b.show.id,
       startTime: b.show.startTime,

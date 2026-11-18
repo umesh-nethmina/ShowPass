@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { h } from '../../lib/http.js';
 import { prisma } from '../../lib/prisma.js';
-import { badRequest } from '../../lib/errors.js';
+import { badRequest, forbidden, notFound } from '../../lib/errors.js';
+import type { AuthUser } from '../../middleware/auth.js';
 import { dec } from '../../lib/money.js';
 import { validate } from '../../middleware/validate.js';
-import { logAdmin } from './scope.js';
+import { assertCinemaAccess, logAdmin } from './scope.js';
 
 /** Movies (FR-9.1), promo codes (FR-9.6) and review moderation (FR-10.2). */
 export const contentRouter = Router();
@@ -158,3 +159,62 @@ contentRouter.patch(
   }),
 );
 
+
+/* ---------- food & drinks (FR-5.5) ---------- */
+
+const concessionSchema = z.object({
+  cinemaId: z.string().nullable(),
+  name: z.string().trim().min(2).max(80),
+  description: z.string().trim().max(200).nullable().optional(),
+  price: z.number().positive().max(100_000),
+  imageUrl: z.string().trim().url().max(500).nullable().optional(),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).max(1000).default(0),
+});
+
+const presentConcession = (c: { price: unknown } & Record<string, unknown>) => ({ ...c, price: Number(c.price) });
+
+/** Cinema admins manage their own cinema's items; items sold everywhere (cinemaId null) are super-admin only. */
+function assertConcessionAccess(user: AuthUser, cinemaId: string | null) {
+  if (user.role === 'SUPER_ADMIN') return;
+  if (cinemaId === null) throw forbidden('Only a super admin can manage items sold at every cinema');
+  assertCinemaAccess(user, cinemaId);
+}
+
+contentRouter.get(
+  '/concessions',
+  h(async (req, res) => {
+    const u = req.user!;
+    const list = await prisma.concession.findMany({
+      where: u.role === 'SUPER_ADMIN' ? {} : { OR: [{ cinemaId: u.cinemaId ?? '__none__' }, { cinemaId: null }] },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      include: { cinema: { select: { name: true } } },
+    });
+    res.json({ concessions: list.map(presentConcession) });
+  }),
+);
+
+contentRouter.post(
+  '/concessions',
+  validate(concessionSchema),
+  h(async (req, res) => {
+    assertConcessionAccess(req.user!, req.body.cinemaId);
+    const c = await prisma.concession.create({ data: { ...req.body, price: dec(Math.round(req.body.price * 100)) } });
+    await logAdmin(req, 'concession.create', 'Concession', c.id, { name: c.name });
+    res.status(201).json({ concession: presentConcession(c) });
+  }),
+);
+
+contentRouter.put(
+  '/concessions/:id',
+  validate(concessionSchema),
+  h(async (req, res) => {
+    const existing = await prisma.concession.findUnique({ where: { id: req.params.id } });
+    if (!existing) throw notFound('Item');
+    assertConcessionAccess(req.user!, existing.cinemaId);
+    assertConcessionAccess(req.user!, req.body.cinemaId);
+    const c = await prisma.concession.update({ where: { id: existing.id }, data: { ...req.body, price: dec(Math.round(req.body.price * 100)) } });
+    await logAdmin(req, 'concession.update', 'Concession', c.id, { name: c.name });
+    res.json({ concession: presentConcession(c) });
+  }),
+);

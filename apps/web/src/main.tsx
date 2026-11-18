@@ -28,6 +28,7 @@ const ScreenEditor = named(() => import('./pages/admin/Venues'), 'ScreenEditor')
 const AdminBookings = named(() => import('./pages/admin/Commerce'), 'AdminBookings');
 const PromoCodes = named(() => import('./pages/admin/Commerce'), 'PromoCodes');
 const Reports = named(() => import('./pages/admin/Commerce'), 'Reports');
+const Concessions = named(() => import('./pages/admin/Commerce'), 'Concessions');
 const AuditLog = named(() => import('./pages/admin/People'), 'AuditLog');
 const Reviews = named(() => import('./pages/admin/People'), 'Reviews');
 const SettingsPage = named(() => import('./pages/admin/People'), 'SettingsPage');
@@ -89,6 +90,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="shows" element={<Shows />} />
                 <Route path="pricing" element={<Pricing />} />
                 <Route path="promo-codes" element={<PromoCodes />} />
+                <Route path="food" element={<Concessions />} />
                 <Route path="bookings" element={<AdminBookings />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="reviews" element={<Reviews />} />

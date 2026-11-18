@@ -88,6 +88,7 @@ export interface Booking {
   status: BookingStatus;
   currency: string;
   subtotalCents: number;
+  itemsCents: number;
   convenienceFeeCents: number;
   taxCents: number;
   discountCents: number;
@@ -101,6 +102,7 @@ export interface Booking {
   createdAt: string;
   qrToken: string | null;
   seats: { seatId: string; label: string; category: SeatCategory; priceCents: number }[];
+  items: { concessionId: string; name: string; unitPriceCents: number; quantity: number }[];
   show: {
     id: string;
     startTime: string;

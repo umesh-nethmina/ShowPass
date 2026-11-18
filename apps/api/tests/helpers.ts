@@ -16,6 +16,7 @@ export async function resetDb() {
     prisma.auditLog.deleteMany(),
     prisma.payment.deleteMany(),
     prisma.bookingSeat.deleteMany(),
+    prisma.bookingItem.deleteMany(),
     prisma.showSeat.deleteMany(),
     prisma.booking.deleteMany(),
     prisma.show.deleteMany(),
@@ -29,6 +30,7 @@ export async function resetDb() {
     prisma.cinema.deleteMany(),
     prisma.movie.deleteMany(),
     prisma.promoCode.deleteMany(),
+    prisma.concession.deleteMany(),
     prisma.setting.deleteMany(),
   ]);
   clearSettingsCache();
