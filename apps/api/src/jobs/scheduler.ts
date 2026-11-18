@@ -1,6 +1,7 @@
 import { logger } from '../lib/logger.js';
 import { expireLapsedHolds } from '../modules/bookings/booking.service.js';
 import { reconcilePayments } from '../modules/payments/payment.service.js';
+import { notifyWatchlists, sendShowReminders } from './notifications.js';
 
 function every(name: string, ms: number, fn: () => Promise<unknown>) {
   let running = false;
@@ -29,6 +30,8 @@ export function startJobs() {
       if (n) logger.info({ n }, 'expired lapsed seat holds');
     }), // FR-4.6
     every('reconcile-payments', 5 * 60_000, () => reconcilePayments()), // NFR-6, FR-5.6
+    every('show-reminders', 5 * 60_000, () => sendShowReminders()), // FR-6.4
+    every('watchlist-notify', 10 * 60_000, () => notifyWatchlists()), // FR-2.5
   ];
   return () => timers.forEach(clearInterval);
 }

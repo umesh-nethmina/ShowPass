@@ -63,3 +63,29 @@ export function cancellationEmail(name: string, reference: string, movie: string
     html: layout('Booking cancelled', `<p>Hi ${esc(name)}, your booking <b>${esc(reference)}</b> for <b>${esc(movie)}</b> has been cancelled.</p><p>Refund: <b>${esc(refund)}</b>. It can take 5–7 working days to reach your account.</p>`),
   };
 }
+
+export function reminderEmail(d: { name: string; reference: string; movie: string; cinema: string; screen: string; startsAt: string; seats: string; address: string }) {
+  return {
+    subject: `Reminder: ${d.movie} starts at ${d.startsAt}`,
+    text: `Hi ${d.name}, a reminder that ${d.movie} starts at ${d.startsAt} at ${d.cinema} (${d.screen}). Seats: ${d.seats}. Booking ${d.reference}. Please arrive 15 minutes early with your QR ticket.`,
+    html: layout(
+      'Your show starts soon',
+      `<p>Hi ${esc(d.name)}, <b>${esc(d.movie)}</b> starts at <b>${esc(d.startsAt)}</b>.</p>
+       <p>${esc(d.cinema)} · ${esc(d.screen)}<br>${esc(d.address)}</p>
+       <p>Seats: <b>${esc(d.seats)}</b> · Booking <b>${esc(d.reference)}</b></p>
+       <p style="color:#a1a1aa">Please arrive 15 minutes early and have your QR ticket ready.</p>`,
+    ),
+  };
+}
+
+export function bookingOpenEmail(d: { name: string; movie: string; url: string }) {
+  return {
+    subject: `Booking is open: ${d.movie}`,
+    text: `Hi ${d.name}, tickets for ${d.movie} are now on sale. Book here: ${d.url}`,
+    html: layout(
+      `${d.movie} – booking is open`,
+      `<p>Hi ${esc(d.name)}, you asked us to let you know: tickets for <b>${esc(d.movie)}</b> are now on sale.</p>
+       <p><a href="${esc(d.url)}" style="display:inline-block;background:#f5c518;color:#0b0b12;padding:10px 18px;border-radius:8px;font-weight:bold;text-decoration:none">Book tickets</a></p>`,
+    ),
+  };
+}

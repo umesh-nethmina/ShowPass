@@ -252,6 +252,7 @@ model Booking {
   refundAmount   Decimal?      @db.Decimal(10, 2)
   checkedInAt    DateTime?
   checkedInById  String?
+  reminderSentAt DateTime?
   confirmedAt    DateTime?
   cancelledAt    DateTime?
   createdAt      DateTime      @default(now())
