@@ -74,8 +74,11 @@ model User {
   id              String    @id @default(cuid())
   name            String
   email           String    @unique
-  phone           String    @unique
-  passwordHash    String
+  /// Optional for Google sign-in accounts until the customer adds one.
+  phone           String?   @unique
+  /// Null for accounts that only sign in with Google.
+  passwordHash    String?
+  googleId        String?   @unique
   role            Role      @default(CUSTOMER)
   cinemaId        String?
   cinema          Cinema?   @relation(fields: [cinemaId], references: [id])

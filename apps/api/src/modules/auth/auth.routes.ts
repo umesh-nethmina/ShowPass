@@ -7,6 +7,9 @@ import { clearSessionCookie, requireAuth, setSessionCookie } from '../../middlew
 import { loginLimiter, otpLimiter } from '../../middleware/security.js';
 import * as schemas from './auth.schemas.js';
 import * as auth from './auth.service.js';
+import { env } from '../../config/env.js';
+import { signInWithGoogle } from './google.js';
+import { z } from 'zod';
 
 export const authRouter = Router();
 
@@ -37,9 +40,30 @@ authRouter.post('/logout', (_req, res) => {
   res.status(204).end();
 });
 
-authRouter.get('/me', (req, res) => {
-  res.json({ user: req.user ? auth.publicUser(req.user) : null });
+authRouter.get(
+  '/me',
+  h(async (req, res) => {
+    if (!req.user) return res.json({ user: null });
+    const row = await prisma.user.findUniqueOrThrow({ where: { id: req.user.id }, select: { passwordHash: true } });
+    res.json({ user: auth.publicUser({ ...req.user, passwordHash: row.passwordHash }) });
+  }),
+);
+
+/** Public auth configuration for the web app (which sign-in options to show). */
+authRouter.get('/config', (_req, res) => {
+  res.json({ googleClientId: env.GOOGLE_CLIENT_ID || null });
 });
+
+authRouter.post(
+  '/google',
+  loginLimiter,
+  validate(z.object({ credential: z.string().min(20).max(4096) })),
+  h(async (req, res) => {
+    const { user, created } = await signInWithGoogle(req.body.credential);
+    setSessionCookie(res, user);
+    res.status(created ? 201 : 200).json({ user: auth.publicUser(user), created });
+  }),
+);
 
 authRouter.patch(
   '/me',
@@ -66,7 +90,10 @@ authRouter.post(
   validate(schemas.changePasswordSchema),
   h(async (req, res) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { id: req.user!.id } });
-    if (!(await auth.verifyPassword(req.body.currentPassword, user.passwordHash))) throw unauthorized('Current password is incorrect');
+    // Google-only accounts have no password yet and may set one without a current password.
+    if (user.passwordHash && !(await auth.verifyPassword(req.body.currentPassword ?? '', user.passwordHash))) {
+      throw unauthorized('Current password is incorrect');
+    }
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await auth.hashPassword(req.body.newPassword) } });
     res.status(204).end();
   }),

@@ -19,7 +19,7 @@ export interface AuthUser {
   cinemaId: string | null;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   emailVerifiedAt: Date | null;
   phoneVerifiedAt: Date | null;
 }

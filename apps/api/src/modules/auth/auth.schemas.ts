@@ -53,4 +53,4 @@ export const resetSchema = z.object({
 });
 
 export const updateMeSchema = z.object({ name: z.string().trim().min(2).max(100).optional(), phone: phoneSchema.optional() });
-export const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema });
+export const changePasswordSchema = z.object({ currentPassword: z.string().optional(), newPassword: passwordSchema });

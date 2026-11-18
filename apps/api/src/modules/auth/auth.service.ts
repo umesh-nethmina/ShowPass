@@ -18,7 +18,7 @@ const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', BCRYPT_ROUNDS);
 export const hashPassword = (pw: string) => bcrypt.hash(pw, BCRYPT_ROUNDS);
 export const verifyPassword = (pw: string, hash: string) => bcrypt.compare(pw, hash);
 
-type PublicFields = Pick<User, 'id' | 'name' | 'email' | 'phone' | 'role' | 'cinemaId' | 'emailVerifiedAt' | 'phoneVerifiedAt'>;
+type PublicFields = Pick<User, 'id' | 'name' | 'email' | 'phone' | 'role' | 'cinemaId' | 'emailVerifiedAt' | 'phoneVerifiedAt'> & { passwordHash?: string | null };
 
 export function publicUser(u: PublicFields) {
   return {
@@ -31,6 +31,8 @@ export function publicUser(u: PublicFields) {
     emailVerified: Boolean(u.emailVerifiedAt),
     phoneVerified: Boolean(u.phoneVerifiedAt),
     verified: Boolean(u.emailVerifiedAt || u.phoneVerifiedAt),
+    // Only known when the full row is passed (login/me); used to show "set a password" in the profile.
+    hasPassword: u.passwordHash === undefined ? undefined : Boolean(u.passwordHash),
   };
 }
 
@@ -59,6 +61,7 @@ export async function register(input: { name: string; email: string; phone: stri
 export async function login(identifier: string, password: string) {
   const user = await findByIdentifier(identifier);
   const ok = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
+  if (user && !user.passwordHash && user.googleId) throw unauthorized('This account uses Google sign-in. Continue with Google instead.');
   if (!user || !ok || !user.isActive) throw unauthorized('Incorrect email/mobile or password');
   return user;
 }
@@ -80,6 +83,7 @@ export async function issueCode(
   if (channel === 'email') {
     await sendEmail({ to: user.email, ...otpEmail(user.name, code, kind) });
   } else {
+    if (!user.phone) throw badRequest('NO_PHONE', 'Add a mobile number to your profile first');
     await sendSms(user.phone, `ShowPass: your ${kind === 'reset' ? 'password reset' : 'verification'} code is ${code}. Valid for 10 minutes.`);
   }
   return code;

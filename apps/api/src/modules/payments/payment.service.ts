@@ -54,7 +54,7 @@ export async function initiatePayment(user: AuthUser, bookingId: string) {
     amountCents,
     currency: settings.currency,
     description: `${booking.show.movie.title} – ${booking.seats.length} ticket(s)`,
-    customer: { name: user.name, email: user.email, phone: user.phone },
+    customer: { name: user.name, email: user.email, phone: user.phone ?? '' },
   });
   return { paymentId: payment.id, checkout };
 }

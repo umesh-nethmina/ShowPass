@@ -10,7 +10,7 @@ import { renderTicketPdf, type TicketData } from './ticket.pdf.js';
 
 const FORMAT_LABEL = { TWO_D: '2D', THREE_D: '3D', IMAX: 'IMAX' } as const;
 
-export async function loadTicketData(bookingId: string): Promise<TicketData & { email: string; phone: string }> {
+export async function loadTicketData(bookingId: string): Promise<TicketData & { email: string; phone: string | null }> {
   const b = await prisma.booking.findUniqueOrThrow({
     where: { id: bookingId },
     include: { user: true, seats: { orderBy: { label: 'asc' } }, show: { include: { movie: true, screen: { include: { cinema: true } } } } },
@@ -48,7 +48,7 @@ export async function sendTicketNotifications(bookingId: string) {
       ...ticketEmail({ name: t.customerName, reference: t.reference, movie: t.movieTitle, cinema: t.cinemaName, screen: t.screenName, startsAt, seats: t.seats.join(', '), total }),
       attachments: [{ filename: `ShowPass-${t.reference}.pdf`, content: pdf, contentType: 'application/pdf' }],
     }),
-    sendSms(t.phone, `ShowPass: booking ${t.reference} confirmed. ${t.movieTitle}, ${startsAt}, ${t.cinemaName}. Seats ${t.seats.join(',')}. Show the QR in your email at entry.`),
+    t.phone && sendSms(t.phone, `ShowPass: booking ${t.reference} confirmed. ${t.movieTitle}, ${startsAt}, ${t.cinemaName}. Seats ${t.seats.join(',')}. Show the QR in your email at entry.`),
   ]);
   await audit({ action: 'ticket.sent', entity: 'Booking', entityId: bookingId });
 }
@@ -59,6 +59,6 @@ export async function sendCancellationNotice(bookingId: string) {
   const refund = formatMoney(b.refundAmount ? toCents(b.refundAmount) : 0, settings.currency);
   await Promise.allSettled([
     sendEmail({ to: b.user.email, ...cancellationEmail(b.user.name, b.reference, b.show.movie.title, refund) }),
-    sendSms(b.user.phone, `ShowPass: booking ${b.reference} cancelled. Refund ${refund}.`),
+    b.user.phone && sendSms(b.user.phone, `ShowPass: booking ${b.reference} cancelled. Refund ${refund}.`),
   ]);
 }

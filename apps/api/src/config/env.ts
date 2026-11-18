@@ -23,6 +23,7 @@ const schema = z.object({
     .default('true')
     .transform((v) => v === 'true'),
   MOCK_GATEWAY_SECRET: z.string().default('mock-secret'),
+  GOOGLE_CLIENT_ID: z.string().optional(),
   SMTP_HOST: z.string().default('localhost'),
   SMTP_PORT: z.coerce.number().default(1025),
   SMTP_USER: z.string().optional(),

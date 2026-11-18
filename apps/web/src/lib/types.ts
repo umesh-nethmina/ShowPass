@@ -8,12 +8,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   role: Role;
   cinemaId: string | null;
   emailVerified: boolean;
   phoneVerified: boolean;
   verified: boolean;
+  hasPassword?: boolean;
 }
 
 export interface MovieSummary {
@@ -110,7 +111,7 @@ export interface Booking {
   };
   payments: { id: string; status: string; amountCents: number; method: string | null; paidAt: string | null; gateway: string }[];
   cancellation: { allowed: boolean; refundCents: number; refundPercent: number; cutoffMinutes: number };
-  customer?: { id: string; name: string; email: string; phone: string };
+  customer?: { id: string; name: string; email: string; phone: string | null };
 }
 
 export type CheckoutAction = { type: 'redirect'; url: string } | { type: 'form'; action: string; fields: Record<string, string> };
