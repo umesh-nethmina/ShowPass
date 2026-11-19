@@ -169,7 +169,7 @@ export function BookingDetail() {
 function Info({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
   return (
     <div className={wide ? 'col-span-2' : ''}>
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-zinc-400">{label}</dt>
       <dd className="font-semibold">{value}</dd>
     </div>
   );

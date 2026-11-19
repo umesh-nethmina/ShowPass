@@ -109,11 +109,11 @@ export function Staff() {
                 <td>
                   {s.name}
                   <br />
-                  <span className="text-xs text-zinc-500">{s.email}</span>
+                  <span className="text-xs text-zinc-400">{s.email}</span>
                 </td>
                 <td>{ROLE_LABEL[s.role]}</td>
                 <td>{s.cinema?.name ?? '—'}</td>
-                <td>{s.isActive ? <span className="text-emerald-400">Active</span> : <span className="text-zinc-500">Disabled</span>}</td>
+                <td>{s.isActive ? <span className="text-emerald-400">Active</span> : <span className="text-zinc-400">Disabled</span>}</td>
                 <td className="text-right">
                   {s.id !== user?.id && (
                     <button className="btn-ghost btn-sm" onClick={() => update.mutate({ id: s.id, isActive: !s.isActive })}>
@@ -161,7 +161,7 @@ export function Reviews() {
                 </button>
               </div>
               {r.comment && <p className="mt-2 text-sm text-zinc-300">{r.comment}</p>}
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-zinc-400">
                 {r.user.name} ({r.user.email}) · {dateLong(r.createdAt)} {r.isHidden && '· hidden'}
               </p>
             </li>
@@ -283,7 +283,7 @@ export function AuditLog() {
                 <td className="whitespace-nowrap text-xs">{dateTime(l.createdAt)}</td>
                 <td className="text-xs">{l.user ? `${l.user.name} (${l.user.email})` : 'System'}</td>
                 <td className="font-mono text-xs">{l.action}</td>
-                <td className="font-mono text-xs text-zinc-500">
+                <td className="font-mono text-xs text-zinc-400">
                   {l.entity} {l.entityId?.slice(-8)}
                 </td>
               </tr>

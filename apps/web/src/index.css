@@ -42,7 +42,7 @@
     @apply min-h-[36px] px-3 py-1.5 text-xs;
   }
   .input {
-    @apply block w-full min-h-[44px] rounded-lg border border-ink-600 bg-ink-850 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400;
+    @apply block w-full min-h-[44px] rounded-lg border border-ink-600 bg-ink-850 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-400 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400;
   }
   .label {
     @apply mb-1 block text-sm font-medium text-zinc-300;

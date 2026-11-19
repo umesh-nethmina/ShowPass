@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
 import type { BookingStatus, MovieSummary } from '../lib/types';
 import { duration } from '../lib/format';
@@ -17,7 +17,7 @@ export function Field({
       </label>
       <input id={id} className="input" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-msg` : undefined} {...props} />
       {(error || hint) && (
-        <p id={`${id}-msg`} className={`mt-1 text-xs ${error ? 'text-red-400' : 'text-zinc-500'}`}>
+        <p id={`${id}-msg`} className={`mt-1 text-xs ${error ? 'text-red-400' : 'text-zinc-400'}`}>
           {error ?? hint}
         </p>
       )}
@@ -88,16 +88,23 @@ export function Stars({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg
   return (
     <span className={`text-gold-400 ${size === 'lg' ? 'text-xl' : 'text-sm'}`} aria-label={`${value.toFixed(1)} out of 5 stars`}>
       {'★'.repeat(Math.round(value))}
-      <span className="text-ink-500">{'★'.repeat(5 - Math.round(value))}</span>
+      <span className="text-zinc-400">{'☆'.repeat(5 - Math.round(value))}</span>
     </span>
   );
 }
 
 export function MovieCard({ movie }: { movie: MovieSummary }) {
+  const [broken, setBroken] = useState(false);
   return (
     <Link to={`/movies/${movie.slug}`} className="group block focus-visible:rounded-xl">
       <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-ink-800">
-        <img src={movie.posterUrl} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+        {broken ? (
+          <div className="flex h-full w-full items-end bg-gradient-to-br from-ink-700 to-ink-900 p-3" aria-hidden>
+            <span className="font-display text-2xl leading-none tracking-wide text-zinc-300">{movie.title}</span>
+          </div>
+        ) : (
+          <img src={movie.posterUrl} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+        )}
         <span className="absolute left-2 top-2 rounded bg-ink-950/80 px-1.5 py-0.5 text-[11px] font-bold">{movie.ageRating}</span>
         {movie.rating?.avg != null && (
           <span className="absolute right-2 top-2 rounded bg-ink-950/80 px-1.5 py-0.5 text-[11px] font-bold text-gold-400">★ {movie.rating.avg.toFixed(1)}</span>
@@ -107,7 +114,7 @@ export function MovieCard({ movie }: { movie: MovieSummary }) {
       <p className="text-xs text-zinc-400">
         {movie.language} · {duration(movie.durationMin)}
       </p>
-      <p className="text-xs text-zinc-500">{movie.genres.join(', ')}</p>
+      <p className="text-xs text-zinc-400">{movie.genres.join(', ')}</p>
     </Link>
   );
 }

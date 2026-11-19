@@ -127,7 +127,7 @@ export function Layout() {
       <main id="main" className="flex-1">
         <Outlet />
       </main>
-      <footer className="mt-16 border-t border-ink-700 py-8 text-sm text-zinc-500">
+      <footer className="mt-16 border-t border-ink-700 py-8 text-sm text-zinc-400">
         <div className="container-page flex flex-col justify-between gap-2 sm:flex-row">
           <p>© {new Date().getFullYear()} ShowPass. All prices in LKR.</p>
           <p>Secure payments. We never store your card details.</p>

@@ -228,14 +228,14 @@ export function ScreenEditor() {
           Fill all with tool
         </button>
       </div>
-      <p className="mt-2 text-xs text-zinc-500">Click or drag across cells to paint seats. Click a row letter to fill the row; click a column number to turn it into an aisle. Seats are labelled automatically.</p>
+      <p className="mt-2 text-xs text-zinc-400">Click or drag across cells to paint seats. Click a row letter to fill the row; click a column number to turn it into an aisle. Seats are labelled automatically.</p>
 
       <div className="card mt-4 overflow-x-auto p-4" onPointerUp={() => setPainting(false)} onPointerLeave={() => setPainting(false)}>
-        <div className="mx-auto mb-4 w-2/3 border-t-4 border-gold-400/60 pt-1 text-center text-[10px] uppercase tracking-[0.3em] text-zinc-500">Screen</div>
+        <div className="mx-auto mb-4 w-2/3 border-t-4 border-gold-400/60 pt-1 text-center text-[10px] uppercase tracking-[0.3em] text-zinc-400">Screen</div>
         <div className="mx-auto w-max select-none">
           <div className="flex gap-1 pl-7">
             {Array.from({ length: cols }, (_, c) => (
-              <button key={c} className="w-6 text-[9px] text-zinc-500 hover:text-red-400" title="Make this column an aisle" onClick={() => clearCol(c)}>
+              <button key={c} className="w-6 text-[9px] text-zinc-400 hover:text-red-400" title="Make this column an aisle" onClick={() => clearCol(c)}>
                 {c + 1}
               </button>
             ))}
@@ -255,7 +255,7 @@ export function ScreenEditor() {
                       key={c}
                       role="button"
                       tabIndex={0}
-                      aria-label={seat ? `${seat.rowLabel}${seat.seatNumber} ${CATEGORY_LABEL[seat.category]}` : `Empty cell row ${r + 1} column ${c + 1}`}
+                      aria-label={seat ? `Row ${seat.rowLabel}, seat ${seat.seatNumber}, ${CATEGORY_LABEL[seat.category]}` : `Empty cell, row ${r + 1}, column ${c + 1}`}
                       onPointerDown={(e) => {
                         e.preventDefault();
                         setPainting(true);

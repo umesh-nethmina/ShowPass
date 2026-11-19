@@ -10,7 +10,7 @@ import { Alert, Empty, Spinner, Stars } from '../components/ui';
 const AVAIL = {
   AVAILABLE: { label: 'Available', cls: 'border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/10' },
   FILLING_FAST: { label: 'Filling fast', cls: 'border-amber-500/50 text-amber-300 hover:bg-amber-500/10' },
-  SOLD_OUT: { label: 'Sold out', cls: 'border-ink-600 text-zinc-500 line-through pointer-events-none' },
+  SOLD_OUT: { label: 'Sold out', cls: 'border-ink-600 text-zinc-400 line-through pointer-events-none' },
 };
 
 export default function MovieDetail() {
@@ -36,7 +36,7 @@ export default function MovieDetail() {
       <section className="relative overflow-hidden border-b border-ink-700">
         {movie.backdropUrl && <img src={movie.backdropUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />}
         <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/80 to-ink-900/40" />
-        <div className="container-page relative grid gap-6 py-10 sm:grid-cols-[200px_1fr] md:grid-cols-[240px_1fr]">
+        <div className="container-page relative grid grid-cols-1 gap-6 py-10 sm:grid-cols-[200px_minmax(0,1fr)] md:grid-cols-[240px_minmax(0,1fr)]">
           <img src={movie.posterUrl} alt={`${movie.title} poster`} className="mx-auto w-48 rounded-xl shadow-2xl sm:mx-0 sm:w-full" />
           <div>
             <h1 className="font-display text-5xl tracking-wide sm:text-6xl">{movie.title}</h1>
@@ -138,15 +138,14 @@ export default function MovieDetail() {
                           </>
                         );
                         const cls = `flex flex-col items-center rounded-lg border px-4 py-2 text-center ${AVAIL[s.availability].cls}`;
-                        const label = `${time(s.startTime)}, ${s.screen.name}, ${FORMAT_LABEL[s.screen.format]}, ${s.language}, ${AVAIL[s.availability].label}`;
                         return (
                           <li key={s.id}>
                             {s.availability === 'SOLD_OUT' ? (
-                              <span className={cls} aria-label={label}>
+                              <span className={cls}>
                                 {inner}
                               </span>
                             ) : (
-                              <Link to={`/shows/${s.id}`} className={cls} aria-label={label}>
+                              <Link to={`/shows/${s.id}`} className={cls}>
                                 {inner}
                               </Link>
                             )}
@@ -157,8 +156,8 @@ export default function MovieDetail() {
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-zinc-500">
-                <span className="text-emerald-300">Available</span> · <span className="text-amber-300">Filling fast</span> · <span className="text-zinc-500">Sold out</span>
+              <p className="mt-3 text-xs text-zinc-400">
+                <span className="text-emerald-300">Available</span> · <span className="text-amber-300">Filling fast</span> · <span className="text-zinc-400">Sold out</span>
               </p>
             </>
           )}
@@ -231,8 +230,8 @@ function Reviews({ movie }: { movie: Movie }) {
             <legend className="label">Your rating</legend>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((n) => (
-                <button type="button" key={n} onClick={() => setRating(n)} aria-label={`${n} star${n > 1 ? 's' : ''}`} aria-pressed={rating === n} className={`text-2xl ${n <= rating ? 'text-gold-400' : 'text-ink-500'}`}>
-                  ★
+                <button type="button" key={n} onClick={() => setRating(n)} aria-label={`${n} star${n > 1 ? 's' : ''}`} aria-pressed={rating === n} className={`text-2xl ${n <= rating ? 'text-gold-400' : 'text-zinc-400'}`}>
+                  {n <= rating ? '★' : '☆'}
                 </button>
               ))}
             </div>
@@ -246,7 +245,7 @@ function Reviews({ movie }: { movie: Movie }) {
           <button className="btn-primary" disabled={m.isPending}>
             Post review
           </button>
-          <p className="text-xs text-zinc-500">You can review a movie after you have watched it with a ShowPass ticket.</p>
+          <p className="text-xs text-zinc-400">You can review a movie after you have watched it with a ShowPass ticket.</p>
         </form>
       )}
       <ul className="mt-4 space-y-3">
@@ -258,7 +257,7 @@ function Reviews({ movie }: { movie: Movie }) {
               <Stars value={r.rating} />
             </div>
             {r.comment && <p className="mt-2 text-sm text-zinc-300">{r.comment}</p>}
-            <p className="mt-1 text-xs text-zinc-500">{dateLong(r.createdAt)}</p>
+            <p className="mt-1 text-xs text-zinc-400">{dateLong(r.createdAt)}</p>
           </li>
         ))}
       </ul>

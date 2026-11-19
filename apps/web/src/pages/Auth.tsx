@@ -62,7 +62,7 @@ export function Login() {
     },
     [setUser, navigate, next],
   );
-  if (user) return <Navigate to={next} replace />;
+  if (user) return <Navigate to={user.role === 'TICKET_CHECKER' && next === '/' ? '/checker' : next} replace />;
   return (
     <AuthCard
       title="Log in"
@@ -80,8 +80,7 @@ export function Login() {
         onSubmit={(e) =>
           f.submit(e, async () => {
             const { user } = await api.post<{ user: User }>('/auth/login', f.values);
-            setUser(user);
-            navigate(user.role === 'TICKET_CHECKER' && next === '/' ? '/checker' : next, { replace: true });
+            setUser(user); // the <Navigate> above sends the user on (checkers go straight to the scanner)
           })
         }
       >
@@ -146,7 +145,7 @@ export function Register() {
         <button className="btn-primary w-full" disabled={f.busy}>
           {f.busy ? 'Creating account…' : 'Create account'}
         </button>
-        <p className="text-xs text-zinc-500">We use your email and mobile number to send tickets and booking updates, in line with Sri Lanka's Personal Data Protection Act.</p>
+        <p className="text-xs text-zinc-400">We use your email and mobile number to send tickets and booking updates, in line with Sri Lanka's Personal Data Protection Act.</p>
       </form>
       <div className="mt-4">
         <GoogleButton onSignedIn={onGoogle} text="signup_with" />

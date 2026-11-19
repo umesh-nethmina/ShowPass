@@ -126,8 +126,8 @@ export function PromoCodes() {
                   <td className="font-mono font-semibold">{p.code}</td>
                   <td>
                     {p.type === 'PERCENT' ? `${p.value}%` : money(p.value * 100)}
-                    {p.maxDiscount != null && <span className="text-zinc-500"> (max {money(p.maxDiscount * 100)})</span>}
-                    {p.minAmount != null && <span className="text-zinc-500"> · min {money(p.minAmount * 100)}</span>}
+                    {p.maxDiscount != null && <span className="text-zinc-400"> (max {money(p.maxDiscount * 100)})</span>}
+                    {p.minAmount != null && <span className="text-zinc-400"> · min {money(p.minAmount * 100)}</span>}
                   </td>
                   <td className="whitespace-nowrap">
                     {dateLong(p.validFrom)} – {dateLong(p.validTo)}
@@ -136,7 +136,7 @@ export function PromoCodes() {
                     {p.usedCount}
                     {p.usageLimit != null && ` / ${p.usageLimit}`}
                   </td>
-                  <td>{p.isActive && new Date(p.validTo) > new Date() ? <span className="text-emerald-400">Active</span> : <span className="text-zinc-500">Inactive</span>}</td>
+                  <td>{p.isActive && new Date(p.validTo) > new Date() ? <span className="text-emerald-400">Active</span> : <span className="text-zinc-400">Inactive</span>}</td>
                   <td className="text-right">
                     <button
                       className="btn-secondary btn-sm"
@@ -231,19 +231,19 @@ export function AdminBookings() {
                     <td className="font-mono text-xs">
                       {b.reference}
                       <br />
-                      <span className="font-sans text-zinc-500">{b.seats.map((s) => s.label).join(', ')}</span>
+                      <span className="font-sans text-zinc-400">{b.seats.map((s) => s.label).join(', ')}</span>
                     </td>
                     <td>
                       {b.customer?.name}
                       <br />
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-zinc-400">
                         {b.customer?.email} · {b.customer?.phone}
                       </span>
                     </td>
                     <td>
                       {b.show.movie.title}
                       <br />
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-zinc-400">
                         {dateTime(b.show.startTime)} · {b.show.cinema.name} {b.show.screen.name}
                       </span>
                     </td>
@@ -375,7 +375,7 @@ export function Reports() {
                 <tbody>
                   {data.rows.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="py-6 text-center text-zinc-500">
+                      <td colSpan={7} className="py-6 text-center text-zinc-400">
                         No shows in this period.
                       </td>
                     </tr>
@@ -495,11 +495,11 @@ export function Concessions() {
                 <tr key={c.id}>
                   <td>
                     <span className="font-semibold">{c.name}</span>
-                    {c.description && <span className="block text-xs text-zinc-500">{c.description}</span>}
+                    {c.description && <span className="block text-xs text-zinc-400">{c.description}</span>}
                   </td>
                   <td className="tabular-nums">{money(c.price * 100)}</td>
                   <td>{c.cinema?.name ?? 'Every cinema'}</td>
-                  <td>{c.isActive ? <span className="text-emerald-400">On sale</span> : <span className="text-zinc-500">Hidden</span>}</td>
+                  <td>{c.isActive ? <span className="text-emerald-400">On sale</span> : <span className="text-zinc-400">Hidden</span>}</td>
                   <td className="text-right">
                     {canEdit(c) && (
                       <button

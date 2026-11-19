@@ -150,12 +150,12 @@ export default function SeatSelection() {
           <div className="mx-auto w-max">
             <div className="mx-auto mb-8 w-4/5">
               <div className="h-2 rounded-t-[100%] border-t-4 border-gold-400/70 shadow-[0_-8px_24px_rgba(245,197,24,0.25)]" />
-              <p className="mt-1 text-center text-xs uppercase tracking-[0.3em] text-zinc-500">Screen</p>
+              <p className="mt-1 text-center text-xs uppercase tracking-[0.3em] text-zinc-400">Screen</p>
             </div>
             <div className="flex gap-2">
               <div className="grid gap-1.5" style={{ gridTemplateRows: `repeat(${show.screen.gridRows}, 2rem)` }} aria-hidden>
                 {Array.from({ length: show.screen.gridRows }, (_, r) => (
-                  <span key={r} className="flex w-5 items-center justify-center text-xs text-zinc-500">
+                  <span key={r} className="flex w-5 items-center justify-center text-xs text-zinc-400">
                     {rows.get(r) ?? ''}
                   </span>
                 ))}
@@ -177,7 +177,7 @@ export default function SeatSelection() {
                       style={{ gridRow: s.gridRow + 1, gridColumn: s.gridCol + 1 }}
                       disabled={unavailable || !show.bookingOpen}
                       aria-pressed={isSel}
-                      aria-label={`Seat ${s.label}, ${CATEGORY_LABEL[s.category]}, ${money(s.priceCents, rules.currency)}, ${state}`}
+                      aria-label={`Row ${s.row}, seat ${s.number}, ${CATEGORY_LABEL[s.category]}, ${money(s.priceCents, rules.currency)}, ${state}`}
                       onClick={() => toggle(s)}
                       className={`flex items-center justify-center rounded-t-lg rounded-b border-2 text-[10px] font-bold transition ${
                         isSel
@@ -197,7 +197,7 @@ export default function SeatSelection() {
             </div>
           </div>
         </div>
-        <p className="mt-2 text-center text-xs text-zinc-500">Seat availability updates live. Selected seats are held for {rules.holdMinutes} minutes once you continue.</p>
+        <p className="mt-2 text-center text-xs text-zinc-400">Seat availability updates live. Selected seats are held for {rules.holdMinutes} minutes once you continue.</p>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-700 bg-ink-900/95 backdrop-blur">

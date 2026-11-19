@@ -88,8 +88,8 @@ export default function Checkout() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-6 md:grid-cols-[1fr_320px]">
-        <section className="card p-5" aria-labelledby="sum-heading">
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="card min-w-0 p-5" aria-labelledby="sum-heading">
           <h2 id="sum-heading" className="sr-only">
             Booking summary
           </h2>
@@ -173,7 +173,7 @@ export default function Checkout() {
             <button className="btn-ghost mt-2 w-full" disabled={expired || abandon.isPending} onClick={() => abandon.mutate()}>
               Change seats
             </button>
-            <p className="mt-3 text-center text-xs text-zinc-500">You will pay on our secure payment partner's page. Card and local payment methods accepted.</p>
+            <p className="mt-3 text-center text-xs text-zinc-400">You will pay on our secure payment partner's page. Card and local payment methods accepted.</p>
           </div>
         </aside>
       </div>

@@ -103,7 +103,7 @@ export default function Shows() {
           </button>
         </div>
         {schedule.error && <div className="md:col-span-3"><Alert>{errorMessage(schedule.error)}</Alert></div>}
-        <p className="text-xs text-zinc-500 md:col-span-3">Each show blocks the screen for the movie's running time plus 15 minutes for cleaning. Overlapping shows are rejected.</p>
+        <p className="text-xs text-zinc-400 md:col-span-3">Each show blocks the screen for the movie's running time plus 15 minutes for cleaning. Overlapping shows are rejected.</p>
       </form>
 
       {result && <div className="mt-4"><Alert kind="success">{result}</Alert></div>}
@@ -150,7 +150,7 @@ export default function Shows() {
                       </td>
                       <td>
                         {s.movie.title}
-                        <span className="text-zinc-500"> · {s.language}</span>
+                        <span className="text-zinc-400"> · {s.language}</span>
                       </td>
                       <td className="whitespace-nowrap">
                         {s.screen.cinema.name} – {s.screen.name}

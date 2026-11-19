@@ -65,7 +65,7 @@ export function GoogleButton({ onSignedIn, text = 'continue_with' }: { onSignedI
   if (!clientId) return null;
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-zinc-500">
+      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-zinc-400">
         <span className="h-px flex-1 bg-ink-600" /> or <span className="h-px flex-1 bg-ink-600" />
       </div>
       <div ref={ref} className="flex justify-center" />
