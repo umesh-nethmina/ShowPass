@@ -34,7 +34,9 @@ Open http://localhost:5180. Emails (OTP codes, e-tickets) land in Mailpit at htt
 | Ticket checker (Colombo) | checker@showpass.local | Checker@1234 |
 | Customer | customer@showpass.local | Customer@1234 |
 
-Promo codes: `WELCOME10` (10%, max LKR 500), `FLAT300` (LKR 300 off over LKR 2,000).
+Promo codes: `WELCOME10` (10%, max LKR 500), `FLAT300` (LKR 300 off over LKR 2,000). Food & drink combos are seeded too.
+
+Google sign-in appears once `GOOGLE_CLIENT_ID` is set in `apps/api/.env` (OAuth web client ID, with `http://localhost:5180` as an authorised JavaScript origin).
 
 ### Payments in development
 `PAYMENT_GATEWAY=mock` sends checkout to a test page (`/mock-gateway/:id`) where you choose **Pay** or **Decline**. The API then receives a signed webhook through the same code path a real gateway uses. Set `PAYMENT_GATEWAY=payhere` with merchant credentials to use PayHere hosted checkout (`notify_url` = `PUBLIC_API_URL/api/payments/webhook/payhere`, which must be publicly reachable).
@@ -42,11 +44,21 @@ Promo codes: `WELCOME10` (10%, max LKR 500), `FLAT300` (LKR 300 off over LKR 2,0
 ## Tests
 
 ```bash
-npm test                                   # API: unit + integration against showpass_test DB
-npm run test:coverage -w apps/api          # currently ~75% statements
+npm test                                   # API: 53 unit + integration tests against showpass_test DB
+npm run test:coverage -w apps/api          # ~79% statements
+npm run test:e2e                           # Playwright browser tests + WCAG 2.1 AA (needs `npm run infra:up`)
+PW_CHANNEL=msedge npm run test:e2e         # …using installed Edge/Chrome instead of Playwright's Chromium
 ```
 
+On Windows, run coverage from a shell whose working directory uses an upper-case drive letter (`D:\…`). Otherwise files are counted twice and the percentage looks halved.
+
+The E2E suite starts its own API (port 4100) and web server (5190) on a freshly seeded `showpass_e2e` database, so it never touches your dev data. Screenshots land in `test-results/screens`.
+
 The integration suite includes 8 customers racing for the same seats (exactly one wins), hold expiry, late and forged webhooks, refunds when seats are lost, cancellation tiers, QR reuse, overlap checks when scheduling shows, and role scoping.
+
+## Deployment
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): Docker images, Caddy with automatic HTTPS, PayHere and SMTP/SMS setup, and daily backups.
 
 ## How the important parts work
 

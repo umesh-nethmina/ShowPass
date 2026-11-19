@@ -86,10 +86,10 @@ This follows SRS §6, plus supporting tables:
 | **2. Cancellation + validation** | Customer cancellation with refund policy; checker QR scan page; mark used | FR-7.x, FR-8.x | Done |
 | **3. Admin panel** | Dashboard; movies; cinemas and screens with visual seat layout editor; showtime scheduling with overlap check; pricing rules; promo codes; booking search; staff and roles; settings; audit log | FR-9.1–9.6, 9.8 | Done |
 | **4. Reports + reviews** | Sales, bookings and occupancy reports with CSV/PDF export; reviews and moderation | FR-9.7, FR-10.x | Done |
-| **5. Hardening** | Payment reconciliation job ✓; audit log ✓; backend coverage 74.7% ✓; code-split staff screens ✓. **Open:** browser/E2E + WCAG audit, PayHere Merchant API (refunds/status lookup currently manual), real SMS provider adapter, Socket.IO Redis adapter for multi-instance, Dockerfiles/deploy, backup job (NFR-16) | NFR-1…17 | In progress |
-| **6. Low-priority / v1.1** | Google sign-in; watchlist *notifications* (watchlist storage exists); F&B combos; 2-hour reminder | FR-1.6, 2.5, 5.5, 6.4 | Not started |
+| **5. Hardening** | Payment reconciliation job; audit log; backend coverage 78.9% (53 tests); code-split staff screens; PayHere Merchant API for refunds + status lookup; Socket.IO Redis adapter; Docker + Caddy HTTPS deploy; daily backups with 30-day retention; Playwright E2E with axe WCAG 2.1 AA checks at 360 px. **Open:** adapter for the chosen local SMS provider (generic HTTP adapter exists); manual screen-reader pass | NFR-1…17 | Done (see open items) |
+| **6. Low-priority** | Google sign-in; watchlist booking-open emails; food & drink combos; 2-hour reminder | FR-1.6, 2.5, 5.5, 6.4 | Done |
 
 ## 6. Testing strategy
 - **Unit**: pricing/fee/tax/discount calculation, refund policy, PayHere hash and signature, overlap detection.
 - **Integration** (Vitest + Supertest, real Postgres): register → verify → hold → pay → webhook → confirmed; concurrent holds on the same seat (exactly one succeeds); hold expiry release; cancellation refund; QR scan twice → `ALREADY_USED`.
-- **Manual / E2E**: the booking flow on a 360 px viewport, checking it takes ≤5 steps (NFR-12).
+- **E2E** (Playwright, `npm run test:e2e`): the booking flow on a 360 px viewport in 5 steps (NFR-12), live seat updates within 2 s (NFR-2), all admin pages, and axe WCAG 2.1 AA scans of the customer pages (NFR-14).

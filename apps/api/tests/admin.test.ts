@@ -4,9 +4,10 @@ import { bookAndPay, createFixture, loginAs, resetDb } from './helpers.js';
 
 beforeEach(resetDb);
 
+/** Two days out, so slots never collide with the fixture show (which starts exactly 24 h from now). */
 const tomorrowAt = (h: number, m = 0) => {
   const d = new Date();
-  d.setDate(d.getDate() + 1);
+  d.setDate(d.getDate() + 2);
   d.setHours(h, m, 0, 0);
   return d;
 };
